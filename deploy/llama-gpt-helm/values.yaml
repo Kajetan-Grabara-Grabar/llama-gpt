@@ -1,0 +1,35 @@
+api:
+  deployment:
+    name: llama-gpt-api
+    replicas: 1
+    image: ghcr.io/getumbrel/llama-gpt-api
+    imageVersion: 1.0.1
+    codeImage: ghcr.io/abetlen/llama-cpp-python
+    codeImageVersion: latest@sha256:0db102369e295fba0c686058148031ada69ded76cd33cbab2f430a5bd5dda6aa
+    codeLlama: false
+    restartPolicy: Always
+    resources: false
+    requestMemory: 5Gi
+    requestCPU: 
+    limitsMemory: 64Gi
+    limitsCPU:
+    env:
+      - name: model
+        configMapName: llama-gpt
+        configMapKey: default_model
+      - name: WAIT_TIMEOUT
+        configMapName: llama-gpt
+        configMapKey: WAIT_TIMEOUT
+      - name: N_GQA
+        configMapName: llama-gpt
+        configMapKey: N_GQA
+      - name: USE_MLOCK
+        configMapName: llama-gpt
+        configMapKey: USE_MLOCK
+    attachVolume: true
+    volumes:
+      - name: hostVolume
+        hostPath: /home/dell-debian/models
+        pathType:  Directory
+        mouthPath: /models
+    

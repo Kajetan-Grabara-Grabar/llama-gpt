@@ -1,0 +1,61 @@
+{{ $api := .Values.api.deployment }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: {{ $api.name }}
+  name: {{ $api.name }}
+spec:
+  replicas: {{ $api.replicas }}
+  selector:
+    matchLabels:
+      service: {{ $api.name }}
+  template:
+    metadata:
+      labels:
+        service: {{ $api.name }}
+    spec:
+      containers:
+        - name: {{ $api.name }}
+          {{ if $api.codeLlama }}
+          image: {{ $api.codeImage }}:{{ $api.codeImageVersion }}
+          {{ else }}
+          image: {{ $api.image }}:{{ $api.imageVersion }}
+          {{ end }}
+          env:
+          {{ range $env := $api.env }}
+            - name: {{ $env.name }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ $env.configMapName }}
+                  key: {{ $env.configMapKey }}
+          {{ end }}
+          {{ if $api.attachVolume }}
+          volumeMounts:
+            {{ range $volume := $api.volumes }}
+            - mountPath: {{ $volume.mouthPat }}
+              name: {{ $volume.name }}
+            {{ end }}
+          {{ end }}
+          {{ if $api.resources }}
+          resources:
+            requests:
+              memory: {{ $api.requestMemory }}
+              cpu: {{ $api.requestCPU }}
+            limits:
+              memory: {{ $api.limitsMemory }}
+              cpu: {{ $api.limitsCPU }}
+          {{ end }}
+          
+      {{ if $api.attachVolume }}
+      volumes:
+        {{ range $volume := $api.volumes }}
+        - name: {{ $volume.name }}
+          {{ if $volume.hostPath }}
+          hostPath:
+            path: {{ $volume.hostPath}}
+            {{ if $volume.pathType }}type: {{ $volume.pathType}} {{ end }}
+          {{ end }}
+        {{ end }}
+      {{ end }}
+      restartPolicy: {{ $api.restartPolicy }}
